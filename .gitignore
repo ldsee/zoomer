@@ -1,0 +1,46 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+release/
+
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+misc.xml
+deploymentTargetDropDown.xml
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Keystore files (NEVER commit signing keys)
+*.jks
+*.keystore
+
+# Mac
+.DS_Store
+
+# Keep gradle wrapper jar (needed to build) - do NOT ignore it
+!gradle-wrapper.jar
