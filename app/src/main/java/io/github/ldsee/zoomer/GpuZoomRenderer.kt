@@ -210,59 +210,6 @@ class GpuZoomRenderer(
 
             GLES20.glDisableVertexAttribArray(aPositionLoc)
             GLES20.glDisableVertexAttribArray(aTexCoordLoc)
-
-            runDiagnosticOnce()
-        }
-
-        // One-shot on-device diagnostic. Logs the real capture vs viewport
-        // dimensions and measures how much actual (non-black) content the texture
-        // contains - this distinguishes "capture is blank" from "capture works but
-        // we're sampling/sizing it wrong", without guessing.
-        private var diagFrame = 0
-        private var diagDone = false
-        private fun runDiagnosticOnce() {
-            if (diagDone) return
-            diagFrame++
-            if (diagFrame < 30) return
-            diagDone = true
-
-            val w = viewportW
-            val h = viewportH
-            val dims = captureDimensions
-            android.util.Log.w(
-                "ZoomerDiag",
-                "viewport=${w}x${h} capture=${dims?.width}x${dims?.height}"
-            )
-            if (w <= 0 || h <= 0) return
-
-            val buf = java.nio.ByteBuffer
-                .allocateDirect(w * h * 4)
-                .order(java.nio.ByteOrder.nativeOrder())
-            GLES20.glReadPixels(0, 0, w, h, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf)
-
-            var nonBlack = 0
-            var sampled = 0
-            var y = 0
-            while (y < h) {
-                var x = 0
-                while (x < w) {
-                    val idx = (y * w + x) * 4
-                    val r = buf.get(idx).toInt() and 0xFF
-                    val g = buf.get(idx + 1).toInt() and 0xFF
-                    val b = buf.get(idx + 2).toInt() and 0xFF
-                    if (r > 16 || g > 16 || b > 16) nonBlack++
-                    sampled++
-                    x += 32
-                }
-                y += 32
-            }
-            val pct = if (sampled > 0) nonBlack * 100 / sampled else 0
-            val verdict = when {
-                pct >= 20 -> "RENDER_OK ($pct%) - content is on screen; if you can't see it the issue is elsewhere"
-                pct in 3..19 -> "PARTIAL ($pct%) - some content, likely size/region mismatch"
-                else -> "BLANK ($pct%) - capture delivering empty frames (sizing/scope issue)"
-            }
-            android.util.Log.w("ZoomerDiag", "VERDICT=$verdict")
         }
 
         fun release() {
