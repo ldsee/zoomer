@@ -33,6 +33,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // On Android 13+ the foreground-service notification (which carries the only
+    // reliable Stop/Close button) is suppressed unless the user has granted
+    // POST_NOTIFICATIONS. We request it before starting so the overlay can always
+    // be stopped. Whatever the user chooses, we continue - the overlay can still
+    // be stopped via the Quick Settings tile even if they decline.
+    private val notificationPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) {
+        continueToOverlayPermissions()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         projectionManager =
@@ -95,6 +106,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun onStartClicked() {
+        // Step 1: ensure we can show the foreground-service notification (the
+        // stop button). On Android 13+ this must be requested at runtime.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            val granted = checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) ==
+                android.content.pm.PackageManager.PERMISSION_GRANTED
+            if (!granted) {
+                notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                return
+            }
+        }
+        continueToOverlayPermissions()
+    }
+
+    private fun continueToOverlayPermissions() {
+        // Step 2: overlay permission, then screen-capture consent.
         if (!Settings.canDrawOverlays(this)) {
             startActivity(
                 Intent(
