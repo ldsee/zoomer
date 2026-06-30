@@ -155,6 +155,13 @@ class ZoomOverlayService : Service() {
         } else {
             params.flags and WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE.inv()
         }
+        // Android 12+ shows an "is displaying over other apps" warning whenever a
+        // FLAG_NOT_TOUCHABLE overlay obscures the app underneath. A fully
+        // transparent window (alpha 0) is an explicit exemption, so in pass mode
+        // we drop the WINDOW alpha to 0 - the renderer already draws nothing then,
+        // so nothing is lost visually, and the warning no longer fires. Back in
+        // zoom mode we restore full opacity so the zoomed image is visible.
+        params.alpha = if (passMode) 0f else 1f
         try {
             windowManager.updateViewLayout(backend.view, params)
         } catch (e: Exception) {
