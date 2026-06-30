@@ -58,43 +58,30 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildUi(): ViewGroup {
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
+        // FrameLayout root lets us pin the theme icon to the true top-right corner
+        // independently of the centered content column.
+        val frame = android.widget.FrameLayout(this).apply {
             setPadding(48, 48, 48, 48)
         }
 
-        // Top row: theme toggle as a borderless icon pinned to the right corner.
-        root.addView(LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+        // Centered content column (everything except the corner icon).
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            layoutParams = android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
             )
-            addView(android.widget.Space(this@MainActivity), LinearLayout.LayoutParams(
-                0, 1, 1f  // flexible spacer pushes the icon to the right
-            ))
-            addView(android.widget.ImageButton(this@MainActivity).apply {
-                setImageResource(themeIconRes(loadThemeMode(this@MainActivity)))
-                // Borderless, transparent background so it reads as an icon, not a box.
-                val ta = theme.obtainStyledAttributes(
-                    intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
-                )
-                setBackgroundResource(ta.getResourceId(0, 0))
-                ta.recycle()
-                contentDescription = "Toggle theme"
-                setOnClickListener { cycleThemeMode(this) }
-            })
-        })
+        }
 
-        root.addView(TextView(this).apply {
+        content.addView(TextView(this).apply {
             text = "Pinch Zoom Overlay"
             textSize = 24f
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, 32)
         })
 
-        root.addView(TextView(this).apply {
+        content.addView(TextView(this).apply {
             text = "Rendering mode"
             textSize = 16f
             setPadding(0, 16, 0, 8)
@@ -115,22 +102,42 @@ class MainActivity : AppCompatActivity() {
             selectedMode = if (gpuButton.isChecked) RenderMode.GPU else RenderMode.CPU
             saveMode(this, selectedMode)
         }
-        root.addView(group)
+        content.addView(group)
 
-        root.addView(Button(this).apply {
+        content.addView(Button(this).apply {
             text = "Start Zoom Overlay"
             setPadding(0, 32, 0, 0)
             setOnClickListener { onStartClicked() }
         })
 
-        root.addView(TextView(this).apply {
+        content.addView(TextView(this).apply {
             text = "You can also start/stop from the Quick Settings tile."
             textSize = 13f
             gravity = Gravity.CENTER
             setPadding(0, 32, 0, 0)
         })
 
-        return root
+        // Add the centered content first, then the corner icon on top of it.
+        frame.addView(content)
+
+        // Theme toggle icon, pinned to the true top-right corner of the screen.
+        frame.addView(android.widget.ImageButton(this).apply {
+            setImageResource(themeIconRes(loadThemeMode(this@MainActivity)))
+            val ta = theme.obtainStyledAttributes(
+                intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+            )
+            setBackgroundResource(ta.getResourceId(0, 0))
+            ta.recycle()
+            contentDescription = "Toggle theme"
+            setOnClickListener { cycleThemeMode(this) }
+            layoutParams = android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                Gravity.TOP or Gravity.END
+            )
+        })
+
+        return frame
     }
 
     private fun onStartClicked() {
