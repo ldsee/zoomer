@@ -62,6 +62,17 @@ class MainActivity : AppCompatActivity() {
         // independently of the centered content column.
         val frame = android.widget.FrameLayout(this).apply {
             setPadding(48, 48, 48, 48)
+            // On modern Android the activity draws edge-to-edge (under the system
+            // status/navigation bars). Without accounting for that, the top-right
+            // icon hides behind the status bar. We add the system bar insets as
+            // extra padding so all content clears the bars on any device.
+            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(this) { v, insets ->
+                val bars = insets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars()
+                )
+                v.setPadding(48 + bars.left, 48 + bars.top, 48 + bars.right, 48 + bars.bottom)
+                insets
+            }
         }
 
         // Centered content column (everything except the corner icon).
