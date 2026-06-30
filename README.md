@@ -21,6 +21,9 @@ Think of it as YouTube's pinch-zoom, but available over any single app.
 
 ## Known limitations
 
+- **Some video apps need CPU mode.** Some apps render video in a hardware
+  surface that the GPU capture path doesn't pick up — the video shows black or
+  won't zoom. Switching to CPU rendering captures these correctly.
 - **Use single-app capture.** When the system screen-capture dialog appears,
   choose a single app rather than the whole screen. **Whole-screen capture is
   experimental and not currently working** (the overlay ends up inside its own

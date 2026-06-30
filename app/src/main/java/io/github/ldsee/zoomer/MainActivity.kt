@@ -126,8 +126,9 @@ class MainActivity : AppCompatActivity() {
         })
 
         content.addView(TextView(this).apply {
-            text = "Tip: when the screen-capture dialog appears, choose \"A single app\".\n" +
-                "Whole-screen capture is experimental and not fully working yet."
+            text = "When the screen-capture dialog appears, choose \"A single app\".\n" +
+                "Whole-screen capture is experimental and not fully working yet.\n" +
+                "If a video shows black or won't zoom, switch to CPU rendering."
             textSize = 13f
             gravity = Gravity.START
             setPadding(0, 24, 0, 0)
