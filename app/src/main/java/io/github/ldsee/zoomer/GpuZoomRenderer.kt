@@ -193,6 +193,24 @@ class GpuZoomRenderer(
             Matrix.translateM(mvpMatrix, 0, state.translateXNorm, state.translateYNorm, 0f)
             Matrix.scaleM(mvpMatrix, 0, state.scale, state.scale, 1f)
 
+            // Correct for the capture-texture vs viewport aspect mismatch. The
+            // captured texture (the full physical display) and the GL viewport can
+            // have different shapes - on this device the capture is 2248x2480 but
+            // the viewport is 2248x2328, so mapping the texture onto the full quad
+            // squashes it vertically. The squash is small at rest but magnifies
+            // visibly when zooming (matching the symptom). We scale the geometry by
+            // the ratio of the two aspect ratios so texture pixels stay square at
+            // every zoom level; letterboxing appears instead of distortion.
+            val texAspect = (captureDimensions?.width ?: viewportW).toFloat() /
+                (captureDimensions?.height ?: viewportH).toFloat().coerceAtLeast(1f)
+            val vpAspect = viewportW.toFloat() / viewportH.toFloat().coerceAtLeast(1f)
+            val ratio = (vpAspect / texAspect)
+            if (ratio >= 1f) {
+                Matrix.scaleM(mvpMatrix, 0, 1f / ratio, 1f, 1f)
+            } else {
+                Matrix.scaleM(mvpMatrix, 0, 1f, ratio, 1f)
+            }
+
             GLES20.glUniformMatrix4fv(uMvpMatrixLoc, 1, false, mvpMatrix, 0)
             // Identity texture matrix; the necessary flip is baked into tex coords.
             GLES20.glUniformMatrix4fv(uTexMatrixLoc, 1, false, identityMatrix, 0)
