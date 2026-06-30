@@ -126,18 +126,18 @@ class MainActivity : AppCompatActivity() {
         })
 
         content.addView(TextView(this).apply {
-            text = "Tip: when the screen-capture dialog appears, choose a SINGLE APP. " +
+            text = "Tip: when the screen-capture dialog appears, choose \"A single app\".\n" +
                 "Whole-screen capture is experimental and not fully working yet."
             textSize = 13f
-            gravity = Gravity.CENTER
+            gravity = Gravity.START
             setPadding(0, 24, 0, 0)
         })
 
         content.addView(TextView(this).apply {
             text = "You can also start/stop from the Quick Settings tile."
             textSize = 13f
-            gravity = Gravity.CENTER
-            setPadding(0, 32, 0, 0)
+            gravity = Gravity.START
+            setPadding(0, 16, 0, 0)
         })
 
         // Add the centered content first, then the corner icon on top of it.
