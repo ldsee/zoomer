@@ -14,13 +14,15 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 
 /**
  * Entry screen: choose rendering mode (GPU/CPU), grant the two permissions
- * (overlay + screen capture), and start the overlay.
+ * (overlay + screen capture), and start the overlay. Theme follows the OS
+ * light/dark setting and can be overridden via a corner toggle.
  */
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private lateinit var projectionManager: MediaProjectionManager
     private var selectedMode = RenderMode.GPU
@@ -45,6 +47,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Apply the saved theme override BEFORE super/setContentView so there is
+        // no flash of the wrong theme. Default is "follow system".
+        AppCompatDelegate.setDefaultNightMode(loadThemeMode(this))
         super.onCreate(savedInstanceState)
         projectionManager =
             getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
@@ -58,6 +63,29 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.CENTER
             setPadding(48, 48, 48, 48)
         }
+
+        // Top row: theme toggle as a borderless icon pinned to the right corner.
+        root.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            addView(android.widget.Space(this@MainActivity), LinearLayout.LayoutParams(
+                0, 1, 1f  // flexible spacer pushes the icon to the right
+            ))
+            addView(android.widget.ImageButton(this@MainActivity).apply {
+                setImageResource(themeIconRes(loadThemeMode(this@MainActivity)))
+                // Borderless, transparent background so it reads as an icon, not a box.
+                val ta = theme.obtainStyledAttributes(
+                    intArrayOf(android.R.attr.selectableItemBackgroundBorderless)
+                )
+                setBackgroundResource(ta.getResourceId(0, 0))
+                ta.recycle()
+                contentDescription = "Toggle theme"
+                setOnClickListener { cycleThemeMode(this) }
+            })
+        })
 
         root.addView(TextView(this).apply {
             text = "Pinch Zoom Overlay"
@@ -143,9 +171,32 @@ class MainActivity : ComponentActivity() {
         moveTaskToBack(true)
     }
 
+    // Cycles Light -> Dark -> Follow System -> Light, persists the choice,
+    // applies it immediately, and recreates the screen so it takes effect now.
+    private fun cycleThemeMode(button: android.widget.ImageButton) {
+        val current = loadThemeMode(this)
+        val next = when (current) {
+            AppCompatDelegate.MODE_NIGHT_NO -> AppCompatDelegate.MODE_NIGHT_YES
+            AppCompatDelegate.MODE_NIGHT_YES -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+            else -> AppCompatDelegate.MODE_NIGHT_NO
+        }
+        saveThemeMode(this, next)
+        AppCompatDelegate.setDefaultNightMode(next)
+        button.setImageResource(themeIconRes(next))
+        // Recreate so the whole screen redraws in the new theme immediately.
+        recreate()
+    }
+
+    private fun themeIconRes(mode: Int): Int = when (mode) {
+        AppCompatDelegate.MODE_NIGHT_NO -> R.drawable.ic_theme_light
+        AppCompatDelegate.MODE_NIGHT_YES -> R.drawable.ic_theme_dark
+        else -> R.drawable.ic_theme_auto
+    }
+
     companion object {
         private const val PREFS = "zoom_prefs"
         private const val KEY_MODE = "render_mode"
+        private const val KEY_THEME = "theme_mode"
 
         fun loadMode(context: Context): RenderMode {
             val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -155,6 +206,18 @@ class MainActivity : ComponentActivity() {
         fun saveMode(context: Context, mode: RenderMode) {
             context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 .edit().putString(KEY_MODE, mode.name).apply()
+        }
+
+        // Theme mode stored as the AppCompat night-mode int; defaults to
+        // follow-system so the app respects the OS setting until told otherwise.
+        fun loadThemeMode(context: Context): Int {
+            val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            return prefs.getInt(KEY_THEME, AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        }
+
+        fun saveThemeMode(context: Context, mode: Int) {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putInt(KEY_THEME, mode).apply()
         }
     }
 }
