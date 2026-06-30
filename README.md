@@ -19,6 +19,14 @@ Think of it as YouTube's pinch-zoom, but available over any single app.
 - **Quick Settings tile** to start/stop without opening the app.
 - Screen stays awake while the overlay is active.
 
+## Known limitations
+
+- **Use single-app capture.** When the system screen-capture dialog appears,
+  choose a single app rather than the whole screen. **Whole-screen capture is
+  experimental and not currently working** (the overlay ends up inside its own
+  capture). It is left in place for future work; single-app capture is the
+  supported path for now.
+
 ## How it works
 
 ```

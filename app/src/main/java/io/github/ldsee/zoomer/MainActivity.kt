@@ -100,17 +100,21 @@ class MainActivity : AppCompatActivity() {
 
         val group = RadioGroup(this).apply { orientation = RadioGroup.VERTICAL }
         val gpuButton = RadioButton(this).apply {
+            id = android.view.View.generateViewId()
             text = "GPU (hardware, smooth - recommended)"
-            isChecked = selectedMode == RenderMode.GPU
         }
         val cpuButton = RadioButton(this).apply {
+            id = android.view.View.generateViewId()
             text = "CPU (software, most compatible)"
-            isChecked = selectedMode == RenderMode.CPU
         }
         group.addView(gpuButton)
         group.addView(cpuButton)
-        group.setOnCheckedChangeListener { _, _ ->
-            selectedMode = if (gpuButton.isChecked) RenderMode.GPU else RenderMode.CPU
+        // Check through the GROUP (not by setting isChecked on the buttons before
+        // they're added) so the RadioGroup actually enforces mutual exclusion -
+        // otherwise both buttons could appear selected at once.
+        group.check(if (selectedMode == RenderMode.CPU) cpuButton.id else gpuButton.id)
+        group.setOnCheckedChangeListener { _, checkedId ->
+            selectedMode = if (checkedId == cpuButton.id) RenderMode.CPU else RenderMode.GPU
             saveMode(this, selectedMode)
         }
         content.addView(group)
@@ -119,6 +123,14 @@ class MainActivity : AppCompatActivity() {
             text = "Start Zoom Overlay"
             setPadding(0, 32, 0, 0)
             setOnClickListener { onStartClicked() }
+        })
+
+        content.addView(TextView(this).apply {
+            text = "Tip: when the screen-capture dialog appears, choose a SINGLE APP. " +
+                "Whole-screen capture is experimental and not fully working yet."
+            textSize = 13f
+            gravity = Gravity.CENTER
+            setPadding(0, 24, 0, 0)
         })
 
         content.addView(TextView(this).apply {
