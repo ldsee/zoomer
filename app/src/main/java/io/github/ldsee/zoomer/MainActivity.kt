@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
 
         content.addView(TextView(this).apply {
             text = "When the screen-capture dialog appears, choose \"A single app\".\n" +
-                "Whole-screen capture is experimental and not fully working yet.\n" +
+                "Whole screen is not offered - Android cannot capture around the overlay.\n" +
                 "If a video shows black or won't zoom, switch to CPU rendering."
             textSize = 13f
             gravity = Gravity.START

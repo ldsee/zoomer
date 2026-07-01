@@ -40,5 +40,12 @@
             </intent-filter>
         </service>
 
-    </application>
+        <activity
+        android:name=".CaptureTrampolineActivity"
+        android:exported="false"
+        android:excludeFromRecents="true"
+        android:noHistory="true"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+</application>
 </manifest>

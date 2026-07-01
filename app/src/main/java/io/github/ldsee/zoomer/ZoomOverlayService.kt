@@ -231,6 +231,7 @@ class ZoomOverlayService : Service() {
             .setSmallIcon(android.R.drawable.ic_menu_camera)
             .setOngoing(true)
             .addAction(0, toggleLabel, servicePendingIntent(ACTION_TOGGLE_MODE, 1))
+            .addAction(0, "Switch app", PendingIntent.getActivity(this, 4, Intent(this, CaptureTrampolineActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE))
             .addAction(0, "Close", servicePendingIntent(ACTION_CLOSE, 2))
             .build()
     }
