@@ -79,10 +79,10 @@ class GpuZoomRenderer(
 
     override fun resizeCapture(dimensions: CaptureDimensions) {
         captureDimensions = dimensions
-        // SurfaceTexture operations must run on the GL thread. Queue the buffer
-        // resize there, then request a render so the new size takes effect.
+        // SurfaceTexture operations must run on the GL thread, and the texture
+        // lives inside the renderer, so queue the resize through it.
         glSurfaceView.queueEvent {
-            surfaceTexture?.setDefaultBufferSize(dimensions.width, dimensions.height)
+            renderer.resizeBuffer(dimensions.width, dimensions.height)
         }
         glSurfaceView.requestRender()
     }
@@ -112,6 +112,11 @@ class GpuZoomRenderer(
 
         private var textureId = 0
         @Volatile private var surfaceTexture: SurfaceTexture? = null
+
+        /** Update the capture buffer size after a rotation. Runs on the GL thread. */
+        fun resizeBuffer(width: Int, height: Int) {
+            surfaceTexture?.setDefaultBufferSize(width, height)
+        }
 
         private var program = 0
         private var aPositionLoc = 0
