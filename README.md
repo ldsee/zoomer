@@ -1,4 +1,8 @@
-# Zoomer
+<div align="center">
+  <img src="docs/logo.png" width="128" height="128" alt="Zoomer logo">
+  <h1>Zoomer</h1>
+  <p><em>Pinch-to-zoom overlay for Android — magnify and pan any app.</em></p>
+</div>
 
 A pinch-to-zoom overlay for Android. Magnify and pan **any** app's content —
 blow up a 4:3 video to fill a tall or foldable display, zoom into a UI that has
