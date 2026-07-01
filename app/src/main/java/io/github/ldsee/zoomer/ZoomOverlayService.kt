@@ -58,6 +58,7 @@ class ZoomOverlayService : Service() {
     private var renderer: ZoomRenderer? = null
     private var lastCaptureWidth = 0
     private var lastCaptureHeight = 0
+    private var captureStarted = false
     private var overlayParams: WindowManager.LayoutParams? = null
 
     private val zoomState = ZoomState()
@@ -140,8 +141,18 @@ class ZoomOverlayService : Service() {
 
     private fun onCaptureSurfaceReady(dimensions: CaptureDimensions, surface: Surface) {
         val data = resultData ?: return
+        if (captureStarted) {
+            // A backend handed us a new Surface after the projection was already
+            // running - this happens when the CPU backend recreates its
+            // ImageReader on rotation. Re-point the existing VirtualDisplay at it
+            // rather than calling start() again (which is a no-op once started, and
+            // was leaving the display mirroring to the old, dead surface - the
+            // picture froze until pass mode forced a redraw).
+            captureEngine.setSurface(surface)
+            return
+        }
         val ok = captureEngine.start(resultCode, data, dimensions, surface)
-        if (!ok) stopSelf()
+        if (ok) captureStarted = true else stopSelf()
     }
 
     private fun onZoomChanged() {
