@@ -101,6 +101,15 @@ interface ZoomRenderer {
     fun updateZoom(state: ZoomState)
 
     /**
+     * Update the capture dimensions after a rotation or fold. The backend must
+     * resize its capture target's buffer (SurfaceTexture default buffer size, or
+     * recreate the ImageReader) to match, so the newly sized mirrored frames are
+     * received correctly instead of wrapping/tiling (which appeared as doubled
+     * content after rotating).
+     */
+    fun resizeCapture(dimensions: CaptureDimensions)
+
+    /**
      * Pass mode: when true the renderer shows nothing (transparent) so the real
      * app shows through and receives touches; when false it paints the zoomed
      * capture opaquely. Zoom state is preserved across toggles.

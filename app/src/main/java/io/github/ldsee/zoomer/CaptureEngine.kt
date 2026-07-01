@@ -100,6 +100,31 @@ class CaptureEngine(
         started = false
     }
 
+    /**
+     * Resize the existing capture to new dimensions (after a rotation or fold).
+     *
+     * Crucially this REUSES the current MediaProjection and VirtualDisplay:
+     * VirtualDisplay.resize() changes the mirrored resolution in place, so we
+     * never call getMediaProjection()/createVirtualDisplay() a second time (which
+     * would throw SecurityException). The caller is responsible for updating the
+     * capture Surface's buffer size to match, so the mirrored frames land in a
+     * correctly sized buffer instead of wrapping (which showed as doubled content).
+     */
+    fun resize(dimensions: CaptureDimensions) {
+        val vd = virtualDisplay ?: return
+        vd.resize(dimensions.width, dimensions.height, dimensions.densityDpi)
+        Log.i(TAG, "Capture resized to ${dimensions.width}x${dimensions.height}.")
+    }
+
+    /**
+     * Point the existing VirtualDisplay at a new output Surface. Used when a
+     * backend must recreate its capture target on rotation (the CPU backend's
+     * ImageReader can't be resized in place, so it hands back a fresh Surface).
+     */
+    fun setSurface(surface: Surface) {
+        virtualDisplay?.surface = surface
+    }
+
     companion object {
         private const val TAG = "CaptureEngine"
     }

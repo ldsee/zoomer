@@ -56,6 +56,8 @@ class ZoomOverlayService : Service() {
 
     private lateinit var captureEngine: CaptureEngine
     private var renderer: ZoomRenderer? = null
+    private var lastCaptureWidth = 0
+    private var lastCaptureHeight = 0
     private var overlayParams: WindowManager.LayoutParams? = null
 
     private val zoomState = ZoomState()
@@ -114,6 +116,8 @@ class ZoomOverlayService : Service() {
         overlayParams = params
 
         val dimensions = captureEngine.resolveDimensions()
+        lastCaptureWidth = dimensions.width
+        lastCaptureHeight = dimensions.height
 
         val backend: ZoomRenderer = when (renderMode) {
             RenderMode.GPU -> GpuZoomRenderer(this, zoomState) { onZoomChanged() }
@@ -142,6 +146,30 @@ class ZoomOverlayService : Service() {
 
     private fun onZoomChanged() {
         renderer?.updateZoom(zoomState)
+    }
+
+    // Handle rotation and fold/unfold. The display dimensions change, but the
+    // capture pipeline was sized once at startup - without updating it, the
+    // mirrored frames wrap into a stale-sized buffer and show as doubled content.
+    // We re-resolve the real dimensions and resize the VirtualDisplay + the
+    // backend's capture buffer to match. Posting lets the display settle so
+    // getRealMetrics reports the new size rather than the old one.
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (!::captureEngine.isInitialized) return
+        mainHandler.post {
+            val dims = captureEngine.resolveDimensions()
+            if (dims.width == lastCaptureWidth && dims.height == lastCaptureHeight) return@post
+            lastCaptureWidth = dims.width
+            lastCaptureHeight = dims.height
+            captureEngine.resize(dims)
+            renderer?.resizeCapture(dims)
+            // Reset pan so the new orientation starts centered rather than
+            // inheriting an offset that no longer maps to the new bounds.
+            zoomState.translateXNorm = 0f
+            zoomState.translateYNorm = 0f
+            renderer?.updateZoom(zoomState)
+        }
     }
 
     private fun togglePassMode() {

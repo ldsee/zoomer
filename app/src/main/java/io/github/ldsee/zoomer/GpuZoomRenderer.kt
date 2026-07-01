@@ -77,6 +77,16 @@ class GpuZoomRenderer(
         glSurfaceView.requestRender()
     }
 
+    override fun resizeCapture(dimensions: CaptureDimensions) {
+        captureDimensions = dimensions
+        // SurfaceTexture operations must run on the GL thread. Queue the buffer
+        // resize there, then request a render so the new size takes effect.
+        glSurfaceView.queueEvent {
+            surfaceTexture?.setDefaultBufferSize(dimensions.width, dimensions.height)
+        }
+        glSurfaceView.requestRender()
+    }
+
     override fun setPassMode(passMode: Boolean) {
         this.passMode = passMode
         glSurfaceView.requestRender()

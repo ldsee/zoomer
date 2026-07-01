@@ -44,6 +44,7 @@ class CpuZoomRenderer(
 
     private var imageReader: ImageReader? = null
     private var dimensions: CaptureDimensions? = null
+    private var captureSurfaceCallback: ((Surface) -> Unit)? = null
 
     // Reused frame bitmap (allocated at stride width) and the cropped view of it.
     @Volatile private var frameBitmap: Bitmap? = null
@@ -57,6 +58,7 @@ class CpuZoomRenderer(
         onSurfaceReady: (Surface) -> Unit
     ) {
         this.dimensions = dimensions
+        captureSurfaceCallback = onSurfaceReady
         val reader = ImageReader.newInstance(
             dimensions.width, dimensions.height, PixelFormat.RGBA_8888, 2
         )
@@ -88,6 +90,43 @@ class CpuZoomRenderer(
 
     override fun updateZoom(state: ZoomState) {
         softwareView.postInvalidate()
+    }
+
+    override fun resizeCapture(dimensions: CaptureDimensions) {
+        // ImageReader can't be resized in place, so build a new one at the new
+        // dimensions and hand its Surface back through the same callback. The
+        // service points the VirtualDisplay at the new Surface. The old reader is
+        // closed after so in-flight frames aren't lost mid-swap.
+        this.dimensions = dimensions
+        val old = imageReader
+        val reader = ImageReader.newInstance(
+            dimensions.width, dimensions.height, PixelFormat.RGBA_8888, 2
+        )
+        reader.setOnImageAvailableListener({ r ->
+            val image = r.acquireLatestImage() ?: return@setOnImageAvailableListener
+            try {
+                val plane = image.planes[0]
+                val pixelStride = plane.pixelStride
+                val rowStride = plane.rowStride
+                val strideW = rowStride / pixelStride
+
+                var bmp = frameBitmap
+                if (bmp == null || bitmapStrideWidth != strideW ||
+                    bmp.height != image.height) {
+                    bmp?.recycle()
+                    bmp = Bitmap.createBitmap(strideW, image.height, Bitmap.Config.ARGB_8888)
+                    frameBitmap = bmp
+                    bitmapStrideWidth = strideW
+                }
+                bmp.copyPixelsFromBuffer(plane.buffer)
+                softwareView.postInvalidate()
+            } finally {
+                image.close()
+            }
+        }, null)
+        imageReader = reader
+        captureSurfaceCallback?.invoke(reader.surface)
+        old?.close()
     }
 
     override fun setPassMode(passMode: Boolean) {
