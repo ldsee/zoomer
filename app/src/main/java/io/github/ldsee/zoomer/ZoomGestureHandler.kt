@@ -43,11 +43,30 @@ class ZoomGestureHandler(
             override fun onScale(detector: ScaleGestureDetector): Boolean {
                 state.scale = (state.scale * detector.scaleFactor)
                     .coerceIn(ZoomState.MIN_SCALE, ZoomState.MAX_SCALE)
+                // Zooming out shrinks the pannable range; re-clamp so the content
+                // can't stay pushed off-screen after a zoom-out.
+                clampTranslation()
                 onChanged()
                 return true
             }
         }
     )
+
+    /**
+     * Constrain the pan offset so the magnified content can never be dragged past
+     * the point where its edge meets the screen edge (no black void, no content
+     * floating in a black border).
+     *
+     * At scale s the content is s times the viewport. In NDC (viewport spans 2.0)
+     * the content overflows by (s - 1) on each side, so the translation magnitude
+     * on each axis is limited to (s - 1). At s = 1 the limit is 0: the content
+     * exactly fills the screen and panning is disabled, which is correct.
+     */
+    private fun clampTranslation() {
+        val maxOffset = (state.scale - 1f).coerceAtLeast(0f)
+        state.translateXNorm = state.translateXNorm.coerceIn(-maxOffset, maxOffset)
+        state.translateYNorm = state.translateYNorm.coerceIn(-maxOffset, maxOffset)
+    }
 
     fun setViewportSize(width: Int, height: Int) {
         if (width > 0) viewportWidth = width
@@ -80,8 +99,13 @@ class ZoomGestureHandler(
                     if (panEngaged) {
                         // Pixel delta -> normalized device units. The viewport spans
                         // 2.0 per axis; screen Y is inverted relative to NDC Y.
-                        state.translateXNorm += (x - lastX) / viewportWidth * 2f
-                        state.translateYNorm += -(y - lastY) / viewportHeight * 2f
+                        // Divide by scale so a finger drag moves the same amount of
+                        // on-screen content at every zoom level (at high zoom the
+                        // content is magnified, so the same pixel drag should move a
+                        // smaller slice of it).
+                        state.translateXNorm += (x - lastX) / viewportWidth * 2f / state.scale
+                        state.translateYNorm += -(y - lastY) / viewportHeight * 2f / state.scale
+                        clampTranslation()
                         lastX = x; lastY = y
                         onChanged()
                     }
