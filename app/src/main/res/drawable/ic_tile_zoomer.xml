@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?android:attr/textColorPrimary">
+    <!-- Three concentric rounded squares = the Zoomer "expanding / zoom" mark,
+         as single-color line art for the Quick Settings tile. The system tints
+         it to the correct on/off color automatically. -->
+    <!-- outer ring -->
+    <path android:fillColor="@android:color/white"
+        android:pathData="M4,2.5 h16 a1.5,1.5 0 0 1 1.5,1.5 v16 a1.5,1.5 0 0 1 -1.5,1.5 h-16 a1.5,1.5 0 0 1 -1.5,-1.5 v-16 a1.5,1.5 0 0 1 1.5,-1.5 z M4.5,4 a0.5,0.5 0 0 0 -0.5,0.5 v15 a0.5,0.5 0 0 0 0.5,0.5 h15 a0.5,0.5 0 0 0 0.5,-0.5 v-15 a0.5,0.5 0 0 0 -0.5,-0.5 z" />
+    <!-- middle ring -->
+    <path android:fillColor="@android:color/white"
+        android:pathData="M8,6.5 h8 a1.5,1.5 0 0 1 1.5,1.5 v8 a1.5,1.5 0 0 1 -1.5,1.5 h-8 a1.5,1.5 0 0 1 -1.5,-1.5 v-8 a1.5,1.5 0 0 1 1.5,-1.5 z M8.5,8 a0.5,0.5 0 0 0 -0.5,0.5 v7 a0.5,0.5 0 0 0 0.5,0.5 h7 a0.5,0.5 0 0 0 0.5,-0.5 v-7 a0.5,0.5 0 0 0 -0.5,-0.5 z" />
+    <!-- inner filled square -->
+    <path android:fillColor="@android:color/white"
+        android:pathData="M11,10.5 h2 a0.5,0.5 0 0 1 0.5,0.5 v2 a0.5,0.5 0 0 1 -0.5,0.5 h-2 a0.5,0.5 0 0 1 -0.5,-0.5 v-2 a0.5,0.5 0 0 1 0.5,-0.5 z" />
+</vector>
