@@ -67,7 +67,8 @@ mode and backend changes.
 | `ZoomGestureHandler.kt` | Shared pinch/pan gesture logic |
 | `ZoomOverlayService.kt` | Foreground service hosting the overlay |
 | `MainActivity.kt` | Permission flow + backend selector |
-| `ZoomQuickSettingsTile.kt` | Start/stop tile |
+| `ZoomQuickSettingsTile.kt` | One-tap toggle: starts a session from anywhere, stops a running one |
+| `CaptureTrampolineActivity.kt` | Invisible launcher: shows the capture consent over whatever is on screen and starts the overlay |
 
 ## Building
 
