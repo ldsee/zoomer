@@ -20,7 +20,10 @@ Think of it as YouTube's pinch-zoom, but available over any single app.
   - **Zoom** — the magnified view, with gestures.
   - **Pass** — transparent passthrough so you can tap the real app (pause,
     scrub, etc.); your zoom is preserved when you switch back.
-- **Quick Settings tile** to start/stop without opening the app.
+- **One-tap start from Quick Settings** — tap the tile from anywhere, the app
+  picker appears over what you're doing, pick the app, and you're zooming.
+  Tap the tile again to stop.
+- **Switch app mid-session** from the notification, without stopping.
 - Screen stays awake while the overlay is active.
 
 ## Known limitations
@@ -28,11 +31,16 @@ Think of it as YouTube's pinch-zoom, but available over any single app.
 - **Some video apps need CPU mode.** Some apps render video in a hardware
   surface that the GPU capture path doesn't pick up — the video shows black or
   won't zoom. Switching to CPU rendering captures these correctly.
-- **Use single-app capture.** When the system screen-capture dialog appears,
-  choose a single app rather than the whole screen. **Whole-screen capture is
-  experimental and not currently working** (the overlay ends up inside its own
-  capture). It is left in place for future work; single-app capture is the
-  supported path for now.
+- **Single-app only — whole-screen is deliberately not offered.** Android gives
+  an app no way to exclude its own overlay from a whole-screen capture: the
+  overlay captures itself in an endless feedback loop, the one exclusion flag
+  (FLAG_SECURE) blacks the capture out instead, and driving the system
+  magnifier draws a mandatory border around the screen. All three roads were
+  tested on-device; single-app capture is the one Android actually supports,
+  so it is the one Zoomer ships.
+- **The capture dialog appears every session.** That consent is an Android
+  privacy requirement and cannot be skipped — Zoomer just removes every other
+  step around it.
 
 ## How it works
 
